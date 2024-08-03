@@ -1,0 +1,21 @@
+### Update existing exchange rate
+PATCH http://localhost:8080/exchangeRate/USDRUB
+Content-Type: application/x-www-form-urlencoded
+
+rate = 85.86
+
+### Create new exchange rate
+POST http://localhost:8080/currencies
+Content-Type: application/x-www-form-urlencoded
+
+baseCurrencyCode = PLN &
+targetCurrencyCode = UAH &
+rate = 10.5
+
+### Get all exchange rates
+GET http://localhost:8080/exchangeRates
+Accept: application/json
+
+### Get exchange rate by code
+GET http://localhost:8080/exchangeRate/USDEUR
+Accept: application/json

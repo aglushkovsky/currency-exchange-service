@@ -1,0 +1,14 @@
+POST http://localhost:8080/currencies
+Content-Type: application/x-www-form-urlencoded
+
+name = Polish Zloty &
+code = PLN &
+sign = zł
+
+### Get currency by Code
+GET http://localhost:8080/currency/RUB
+Accept: application/json
+
+### Get all currencies
+GET http://localhost:8080/currencies
+Accept: application/json
