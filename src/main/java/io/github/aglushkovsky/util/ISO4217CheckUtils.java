@@ -9,6 +9,14 @@ public class ISO4217CheckUtils {
             return false;
         }
 
+        if (!isCurrencyCodeInUpperCase(currencyCode)) {
+            return false;
+        }
+
         return currencyCode.chars().allMatch(Character::isLetter);
+    }
+
+    private static boolean isCurrencyCodeInUpperCase(String currencyCode) {
+        return currencyCode.toUpperCase().equals(currencyCode);
     }
 }
