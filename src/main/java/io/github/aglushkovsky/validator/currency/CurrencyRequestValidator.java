@@ -6,6 +6,8 @@ import io.github.aglushkovsky.validator.ValidationResult;
 import io.github.aglushkovsky.validator.Validator;
 
 import static io.github.aglushkovsky.error.message.ValidationErrorMessage.REQUIRED_PARAMETERS_ARE_MISSING;
+import static io.github.aglushkovsky.util.ISO4217CheckUtils.ISO4217_VIOLATION_ERROR_MESSAGE;
+import static io.github.aglushkovsky.util.ISO4217CheckUtils.isISO4217;
 
 public class CurrencyRequestValidator implements Validator<CurrencyRequestDto> {
     private static final CurrencyRequestValidator INSTANCE = new CurrencyRequestValidator();
@@ -29,6 +31,10 @@ public class CurrencyRequestValidator implements Validator<CurrencyRequestDto> {
 
         if (!validationResult.isValid()) {
             throw new ValidationException(Validator.getErrorMessage(validationResult, REQUIRED_PARAMETERS_ARE_MISSING));
+        }
+
+        if (!isISO4217(currencyCode)) {
+            throw new ValidationException(ISO4217_VIOLATION_ERROR_MESSAGE);
         }
     }
 

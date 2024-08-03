@@ -11,28 +11,35 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import static io.github.aglushkovsky.error.message.CurrencyErrorMessage.CURRENCY_CODE_SHOULD_CONTAIN_THREE_CHARACTERS;
 import static io.github.aglushkovsky.error.message.ExchangeRatesErrorMessage.EXCHANGE_RATE_PAIR_CODES_SHOULD_CONTAIN_SIX_CHARACTERS;
+import static io.github.aglushkovsky.util.ISO4217CheckUtils.*;
 
 public class ParseUtils {
     public static String parseCurrencyCode(String pathInfo) {
         String[] pathParameters = pathInfo.split("/");
         String currencyCode = pathParameters[1];
-        int numberOfCharactersInCurrencyCode = 3;
-        if (currencyCode.length() != numberOfCharactersInCurrencyCode) {
-            throw new ParseException(CURRENCY_CODE_SHOULD_CONTAIN_THREE_CHARACTERS);
+
+        if (!isISO4217(currencyCode)) {
+            throw new ParseException(ISO4217_VIOLATION_ERROR_MESSAGE);
         }
+
         return currencyCode;
     }
 
     public static CurrencyCodesPair parseCurrencyPairCodes(String pathInfo) {
         String currencyCodes = pathInfo.split("/")[1];
-        int numberOfCharactersInPairCurrencyCodes = 6;
+
+        int numberOfCharactersInPairCurrencyCodes = NUMBER_OF_CHARACTERS_IN_CURRENCY_CODE * 2;
         if (currencyCodes.length() != numberOfCharactersInPairCurrencyCodes) {
             throw new ParseException(EXCHANGE_RATE_PAIR_CODES_SHOULD_CONTAIN_SIX_CHARACTERS);
         }
+
         String firstCode = currencyCodes.substring(0, 3);
         String secondCode = currencyCodes.substring(3, 6);
+        if (!isISO4217(firstCode) || !isISO4217(secondCode)) {
+            throw new ParseException(ISO4217_VIOLATION_ERROR_MESSAGE);
+        }
+
         return new CurrencyCodesPair(firstCode, secondCode);
     }
 
@@ -51,13 +58,15 @@ public class ParseUtils {
         String[] parameters = requestBody.split("&");
         for (String parameter : parameters) {
             String[] keyValuePair = parameter.split("=", 2);
-            String key = keyValuePair[0];
-            String value = keyValuePair[1];
-            if (parametersMap.containsKey(key)) {
-                List<String> values = parametersMap.get(key);
-                values.add(value);
-            } else {
-                parametersMap.put(key, new ArrayList<>(List.of(value)));
+            if (keyValuePair.length == 2) {
+                String key = keyValuePair[0];
+                String value = keyValuePair[1];
+                if (parametersMap.containsKey(key)) {
+                    List<String> values = parametersMap.get(key);
+                    values.add(value);
+                } else {
+                    parametersMap.put(key, new ArrayList<>(List.of(value)));
+                }
             }
         }
 
