@@ -6,6 +6,7 @@ import io.github.aglushkovsky.dto.exchangerate.ExchangeRateRequestDto;
 import io.github.aglushkovsky.entity.ExchangeRate;
 import io.github.aglushkovsky.error.ResponseError;
 import io.github.aglushkovsky.exception.DaoException;
+import io.github.aglushkovsky.exception.ExchangeRateAlreadyExistsException;
 import io.github.aglushkovsky.exception.ParseException;
 import io.github.aglushkovsky.exception.ValidationException;
 import io.github.aglushkovsky.mapper.exchangerate.ExchangeRateMapper;
@@ -22,7 +23,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.NoSuchElementException;
 
-import static io.github.aglushkovsky.exception.DaoException.CONSTRAINT_VIOLATION_ERROR_CODE;
 import static jakarta.servlet.http.HttpServletResponse.*;
 
 @WebServlet("/exchangeRates")
@@ -74,16 +74,10 @@ public class ExchangeRatesServlet extends HttpServlet {
             ResponseUtils.sendError(ResponseError.of(SC_BAD_REQUEST, e.getMessage()), resp);
         } catch (NoSuchElementException e) {
             ResponseUtils.sendError(ResponseError.of(SC_NOT_FOUND, e.getMessage()), resp);
+        } catch (ExchangeRateAlreadyExistsException e) {
+            ResponseUtils.sendError(ResponseError.of(SC_CONFLICT, e.getMessage()), resp);
         } catch (DaoException e) {
-            ResponseError error;
-
-            if (e.getCause().getErrorCode() == CONSTRAINT_VIOLATION_ERROR_CODE) {
-                error = ResponseError.of(SC_CONFLICT, e.getMessage());
-            } else {
-                error = ResponseError.of(SC_INTERNAL_SERVER_ERROR, e.getMessage());
-            }
-
-            ResponseUtils.sendError(error, resp);
+            ResponseUtils.sendError(ResponseError.of(SC_INTERNAL_SERVER_ERROR, e.getMessage()), resp);
         }
     }
 }

@@ -2,6 +2,8 @@ package io.github.aglushkovsky.dao;
 
 import io.github.aglushkovsky.entity.Currency;
 import io.github.aglushkovsky.exception.DaoException;
+import io.github.aglushkovsky.mapper.error.CurrencyDaoExceptionFromSQLiteErrorFactory;
+import io.github.aglushkovsky.mapper.error.ExceptionFromDBErrorFactory;
 import io.github.aglushkovsky.util.ConnectionProvider;
 
 import java.sql.*;
@@ -9,11 +11,11 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
-import static io.github.aglushkovsky.exception.DaoException.CONSTRAINT_VIOLATION_ERROR_CODE;
 import static java.sql.Statement.*;
 
 public class CurrencyDao {
     private static final CurrencyDao INSTANCE = new CurrencyDao();
+    private final ExceptionFromDBErrorFactory exceptionFromDBErrorFactory = CurrencyDaoExceptionFromSQLiteErrorFactory.getInstance();
 
     private static final String FIND_ALL_SQL = """
             SELECT id, code, full_name, sign
@@ -70,14 +72,10 @@ public class CurrencyDao {
             if (key.next()) {
                 currency.setId(key.getInt(1));
             }
-
-            return currency;
         } catch (SQLException e) {
-            if (e.getErrorCode() == CONSTRAINT_VIOLATION_ERROR_CODE) {
-                throw new DaoException("Валюта с указанным кодом уже существует", e);
-            }
-            throw new DaoException(e);
+            exceptionFromDBErrorFactory.createAndThrow(e.getErrorCode(), e);
         }
+        return currency;
     }
 
     private Currency buildCurrency(ResultSet resultSet) throws SQLException {

@@ -5,6 +5,7 @@ import io.github.aglushkovsky.dto.currency.CurrencyResponseDto;
 import io.github.aglushkovsky.dto.currency.CurrencyRequestDto;
 import io.github.aglushkovsky.entity.Currency;
 import io.github.aglushkovsky.error.ResponseError;
+import io.github.aglushkovsky.exception.CurrencyAlreadyExistsException;
 import io.github.aglushkovsky.exception.DaoException;
 import io.github.aglushkovsky.exception.ValidationException;
 import io.github.aglushkovsky.mapper.currency.CurrencyMapper;
@@ -19,7 +20,6 @@ import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.util.*;
 
-import static io.github.aglushkovsky.exception.DaoException.CONSTRAINT_VIOLATION_ERROR_CODE;
 import static jakarta.servlet.http.HttpServletResponse.*;
 
 @WebServlet("/currencies")
@@ -66,16 +66,10 @@ public class CurrenciesServlet extends HttpServlet {
             Currency savedCurrency = currencyDao.save(currency);
             CurrencyResponseDto savedCurrencyResponseDto = currencyMapper.mapFrom(savedCurrency);
             ResponseUtils.sendObject(savedCurrencyResponseDto, SC_CREATED, resp);
+        } catch (CurrencyAlreadyExistsException e) {
+            ResponseUtils.sendError(ResponseError.of(SC_CONFLICT, e.getMessage()), resp);
         } catch (DaoException e) {
-            ResponseError error;
-
-            if (e.getCause().getErrorCode() == CONSTRAINT_VIOLATION_ERROR_CODE) {
-                error = ResponseError.of(SC_CONFLICT, e.getMessage());
-            } else {
-                error = ResponseError.of(SC_INTERNAL_SERVER_ERROR, e.getMessage());
-            }
-
-            ResponseUtils.sendError(error, resp);
+            ResponseUtils.sendError(ResponseError.of(SC_INTERNAL_SERVER_ERROR, e.getMessage()), resp);
         }
     }
 }

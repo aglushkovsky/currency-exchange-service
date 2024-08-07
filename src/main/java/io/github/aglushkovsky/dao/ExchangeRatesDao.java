@@ -3,6 +3,8 @@ package io.github.aglushkovsky.dao;
 import io.github.aglushkovsky.entity.Currency;
 import io.github.aglushkovsky.entity.ExchangeRate;
 import io.github.aglushkovsky.exception.DaoException;
+import io.github.aglushkovsky.mapper.error.ExceptionFromDBErrorFactory;
+import io.github.aglushkovsky.mapper.error.ExchangeRatesDaoExceptionFromSQLiteErrorFactory;
 import io.github.aglushkovsky.util.ConnectionProvider;
 
 import java.sql.*;
@@ -10,10 +12,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
-import static io.github.aglushkovsky.exception.DaoException.CONSTRAINT_VIOLATION_ERROR_CODE;
-
 public class ExchangeRatesDao {
     private static final ExchangeRatesDao INSTANCE = new ExchangeRatesDao();
+    private final ExceptionFromDBErrorFactory exceptionFromDBErrorFactory = ExchangeRatesDaoExceptionFromSQLiteErrorFactory.getInstance();
 
     private static final String FIND_ALL_SQL = """
             SELECT er.id AS id, er.rate AS rate,
@@ -49,14 +50,10 @@ public class ExchangeRatesDao {
             if (keys.next()) {
                 exchangeRate.setId(keys.getInt(1));
             }
-
-            return exchangeRate;
         } catch (SQLException e) {
-            if (e.getErrorCode() == CONSTRAINT_VIOLATION_ERROR_CODE) {
-                throw new DaoException("Курс с указанными кодами валют уже существует", e);
-            }
-            throw new DaoException(e);
+            exceptionFromDBErrorFactory.createAndThrow(e.getErrorCode(), e);
         }
+        return exchangeRate;
     }
 
     public boolean update(ExchangeRate exchangeRate) {
