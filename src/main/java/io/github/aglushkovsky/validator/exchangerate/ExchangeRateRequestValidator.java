@@ -7,6 +7,8 @@ import io.github.aglushkovsky.validator.Validator;
 
 import static io.github.aglushkovsky.error.message.ValidationErrorMessage.BASE_AND_TARGET_CURRENCY_CODES_EQUALITY_NOT_ALLOWED;
 import static io.github.aglushkovsky.error.message.ValidationErrorMessage.REQUIRED_PARAMETERS_ARE_MISSING;
+import static io.github.aglushkovsky.util.ISO4217CheckUtils.ISO4217_VIOLATION_ERROR_MESSAGE;
+import static io.github.aglushkovsky.util.ISO4217CheckUtils.isISO4217;
 
 public class ExchangeRateRequestValidator implements Validator<ExchangeRateRequestDto> {
     private static final ExchangeRateRequestValidator INSTANCE = new ExchangeRateRequestValidator();
@@ -30,6 +32,10 @@ public class ExchangeRateRequestValidator implements Validator<ExchangeRateReque
 
         if (!validationResult.isValid()) {
             throw new ValidationException(Validator.getErrorMessage(validationResult, REQUIRED_PARAMETERS_ARE_MISSING));
+        }
+
+        if (!isISO4217(baseCurrencyCodeParameter) || !isISO4217(targetCurrencyCodeParameter)) {
+            throw new ValidationException(ISO4217_VIOLATION_ERROR_MESSAGE);
         }
 
         if (baseCurrencyCodeParameter.equals(targetCurrencyCodeParameter)) {
