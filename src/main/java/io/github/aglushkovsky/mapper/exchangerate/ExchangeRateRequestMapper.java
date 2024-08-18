@@ -2,6 +2,7 @@ package io.github.aglushkovsky.mapper.exchangerate;
 
 import io.github.aglushkovsky.dao.CurrencyDao;
 import io.github.aglushkovsky.dto.exchangerate.ExchangeRateRequestDto;
+import io.github.aglushkovsky.entity.Currency;
 import io.github.aglushkovsky.entity.ExchangeRate;
 import io.github.aglushkovsky.mapper.Mapper;
 import io.github.aglushkovsky.util.ParseUtils;
@@ -17,10 +18,8 @@ public class ExchangeRateRequestMapper implements Mapper<ExchangeRateRequestDto,
     @Override
     public ExchangeRate mapFrom(ExchangeRateRequestDto exchangeRateRequestParametersDto) {
         return new ExchangeRate(
-                currencyDao.findByCode(exchangeRateRequestParametersDto.getBaseCurrencyCode())
-                        .orElseThrow(() -> new NoSuchElementException(BASE_CURRENCY_NOT_FOUND)),
-                currencyDao.findByCode(exchangeRateRequestParametersDto.getTargetCurrencyCode())
-                        .orElseThrow(() -> new NoSuchElementException(TARGET_CURRENCY_NOT_FOUND)),
+                new Currency(exchangeRateRequestParametersDto.getBaseCurrencyCode()),
+                new Currency(exchangeRateRequestParametersDto.getTargetCurrencyCode()),
                 ParseUtils.parseBigDecimal(exchangeRateRequestParametersDto.getRate())
         );
     }

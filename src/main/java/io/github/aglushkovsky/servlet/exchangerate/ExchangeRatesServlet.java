@@ -5,10 +5,7 @@ import io.github.aglushkovsky.dto.exchangerate.ExchangeRateResponseDto;
 import io.github.aglushkovsky.dto.exchangerate.ExchangeRateRequestDto;
 import io.github.aglushkovsky.entity.ExchangeRate;
 import io.github.aglushkovsky.error.ResponseError;
-import io.github.aglushkovsky.exception.DaoException;
-import io.github.aglushkovsky.exception.ExchangeRateAlreadyExistsException;
-import io.github.aglushkovsky.exception.ParseException;
-import io.github.aglushkovsky.exception.ValidationException;
+import io.github.aglushkovsky.exception.*;
 import io.github.aglushkovsky.mapper.exchangerate.ExchangeRateMapper;
 import io.github.aglushkovsky.mapper.exchangerate.ExchangeRateRequestMapper;
 import io.github.aglushkovsky.util.ResponseUtils;
@@ -74,7 +71,7 @@ public class ExchangeRatesServlet extends HttpServlet {
             ResponseUtils.sendError(ResponseError.of(SC_BAD_REQUEST, e.getMessage()), resp);
         } catch (NoSuchElementException e) {
             ResponseUtils.sendError(ResponseError.of(SC_NOT_FOUND, e.getMessage()), resp);
-        } catch (ExchangeRateAlreadyExistsException e) {
+        } catch (ExchangeRateAlreadyExistsException | CurrencyInExchangeRateNotFoundException e) {
             ResponseUtils.sendError(ResponseError.of(SC_CONFLICT, e.getMessage()), resp);
         } catch (DaoException e) {
             ResponseUtils.sendError(ResponseError.of(SC_INTERNAL_SERVER_ERROR, e.getMessage()), resp);

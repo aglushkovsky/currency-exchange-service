@@ -73,7 +73,7 @@ public class CurrencyDao {
                 currency.setId(key.getInt(1));
             }
         } catch (SQLException e) {
-            exceptionFromDBErrorFactory.createAndThrow(e.getErrorCode(), e);
+            exceptionFromDBErrorFactory.createAndThrow(e);
         }
         return currency;
     }

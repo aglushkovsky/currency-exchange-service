@@ -14,7 +14,7 @@ import java.util.Optional;
 
 public class ExchangeRatesDao {
     private static final ExchangeRatesDao INSTANCE = new ExchangeRatesDao();
-    private final ExceptionFromDBErrorFactory exceptionFromDBErrorFactory = ExchangeRatesDaoExceptionFromSQLiteErrorFactory.getInstance();
+    private static final ExceptionFromDBErrorFactory exceptionFromDBErrorFactory = ExchangeRatesDaoExceptionFromSQLiteErrorFactory.getInstance();
 
     private static final String FIND_ALL_SQL = """
             SELECT er.id AS id, er.rate AS rate,
@@ -29,9 +29,16 @@ public class ExchangeRatesDao {
             WHERE c1.code = ? AND c2.code = ?
             """;
 
+    private static final String FIND_BY_ID = FIND_ALL_SQL + """
+            WHERE er.id = ?
+            """;
+
     private static final String SAVE_SQL = """
             INSERT INTO exchange_rates(base_currency_id, target_currency_id, rate)
-            VALUES (?, ?, ?)
+            VALUES
+            ((SELECT id FROM currencies WHERE code = ?),
+             (SELECT id FROM currencies WHERE code = ?),
+             ?)
             """;
 
     private static final String UPDATE_SQL = """
@@ -41,17 +48,18 @@ public class ExchangeRatesDao {
     public ExchangeRate save(ExchangeRate exchangeRate) {
         try (Connection connection = ConnectionProvider.getConnection();
              PreparedStatement statement = connection.prepareStatement(SAVE_SQL)) {
-            statement.setInt(1, exchangeRate.getBaseCurrency().getId());
-            statement.setInt(2, exchangeRate.getTargetCurrency().getId());
+            statement.setString(1, exchangeRate.getBaseCurrency().getCode());
+            statement.setString(2, exchangeRate.getTargetCurrency().getCode());
             statement.setBigDecimal(3, exchangeRate.getRate());
 
             statement.executeUpdate();
             ResultSet keys = statement.getGeneratedKeys();
             if (keys.next()) {
-                exchangeRate.setId(keys.getInt(1));
+                int generatedId = keys.getInt(1);
+                exchangeRate = findById(generatedId).get();
             }
         } catch (SQLException e) {
-            exceptionFromDBErrorFactory.createAndThrow(e.getErrorCode(), e);
+            exceptionFromDBErrorFactory.createAndThrow(e);
         }
         return exchangeRate;
     }
@@ -78,6 +86,21 @@ public class ExchangeRatesDao {
                 exchangeRates.add(buildExchangeRate(resultSet));
             }
             return exchangeRates;
+        } catch (SQLException e) {
+            throw new DaoException(e);
+        }
+    }
+
+    public Optional<ExchangeRate> findById(int id) {
+        try (Connection connection = ConnectionProvider.getConnection();
+             PreparedStatement statement = connection.prepareStatement(FIND_BY_ID)) {
+            statement.setInt(1, id);
+            ResultSet resultSet = statement.executeQuery();
+            if (resultSet.next()) {
+                return Optional.of(buildExchangeRate(resultSet));
+            } else {
+                return Optional.empty();
+            }
         } catch (SQLException e) {
             throw new DaoException(e);
         }

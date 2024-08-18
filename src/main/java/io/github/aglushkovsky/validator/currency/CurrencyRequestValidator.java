@@ -15,7 +15,7 @@ public class CurrencyRequestValidator implements Validator<CurrencyRequestDto> {
     @Override
     public void validate(CurrencyRequestDto currency) {
         ValidationResult validationResult = new ValidationResult();
-
+        
         String currencyCode = currency.getCode();
         if (currencyCode == null || currencyCode.isEmpty()) {
             validationResult.add("code");
